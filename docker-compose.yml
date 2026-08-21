@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: on_demand_order
+      POSTGRES_USER: on_demand_order_user
+      POSTGRES_PASSWORD: Deepshikha143
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  celery_worker:
+    build: .
+    command: celery -A On_Demand_Order worker --loglevel=info
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  celery_beat:
+    build: .
+    command: celery -A On_Demand_Order beat --loglevel=info
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+volumes:
+  db_data:
